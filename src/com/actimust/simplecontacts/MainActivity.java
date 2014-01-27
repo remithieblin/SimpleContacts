@@ -7,7 +7,6 @@ import android.accounts.Account;
 import android.accounts.AccountManager;
 import android.content.ContentProviderOperation;
 import android.content.Context;
-import android.graphics.Color;
 import android.os.Bundle;
 import android.provider.ContactsContract;
 import android.view.KeyEvent;
@@ -34,8 +33,6 @@ public class MainActivity extends SherlockActivity {
 
 	private final String accountType = "com.google";
 	private String accountName;
-	private boolean isInitialized = true;
-	private boolean mActionModeIsActive;
 	private boolean mBackWasPressedInActionMode;
 
 	@Override
@@ -56,7 +53,6 @@ public class MainActivity extends SherlockActivity {
 
 		setContentView(R.layout.activity_main);
 
-		initializeForm();
 
 		final EditText nameET = ((EditText) findViewById(R.id.nameET));
 		nameET.setOnTouchListener(new OnTouchListener() {
@@ -66,7 +62,6 @@ public class MainActivity extends SherlockActivity {
 					mMode = startActionMode(new AnActionModeOfEpicProportions());
 					actionModeUp = true;
 				}
-				getReadyForInput(nameET);
 				return false;
 			}
 		});
@@ -81,23 +76,33 @@ public class MainActivity extends SherlockActivity {
 					mMode = startActionMode(new AnActionModeOfEpicProportions());
 					actionModeUp = true;
 				}
-				getReadyForInput(phoneET);
 				return false;
 			}
 		});
 	}
+	
+	/**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        super.onCreateOptionsMenu(menu);
+		menu.add("Settings")
+      .setIcon( R.drawable.ic_launcher_settings )
+      .setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
+        return true;
+    }
 
-	private void getReadyForInput(final EditText editText) {
-		editText.setText("");
-		editText.setTextColor(Color.WHITE);
-		isInitialized = false;
-	}
 
 	private final class AnActionModeOfEpicProportions implements
 			ActionMode.Callback {
 
 		@Override
 		public boolean onCreateActionMode(ActionMode mode, Menu menu) {
+			
+
+
+			
 			return true;
 		}
 
@@ -119,7 +124,12 @@ public class MainActivity extends SherlockActivity {
 
 			if (!mBackWasPressedInActionMode)
 				saveContact();
-			initializeForm();
+			EditText nameET = ((EditText) findViewById(R.id.nameET));
+			nameET.setText("");
+			EditText phoneET = ((EditText) findViewById(R.id.phoneET));
+			phoneET.setText("");
+			
+			mBackWasPressedInActionMode = false;
 			actionModeUp = false;
 		}
 
@@ -140,7 +150,7 @@ public class MainActivity extends SherlockActivity {
 		EditText phoneET = ((EditText) findViewById(R.id.phoneET));
 		String phone = phoneET.getText().toString();
 
-		if (name != null && name != "" && !isInitialized) {
+		if (name != null && name != "" ) {
 
 			/*
 			 * Prepares the batch operation for inserting a new raw contact and
@@ -268,16 +278,4 @@ public class MainActivity extends SherlockActivity {
 		}
 	}
 
-	private void initializeForm() {
-		EditText nameET = ((EditText) findViewById(R.id.nameET));
-		initialiseEditText(nameET, "Name");
-		EditText phoneET = ((EditText) findViewById(R.id.phoneET));
-		initialiseEditText(phoneET, "415 415 6969");
-		isInitialized = true;
-	}
-
-	private void initialiseEditText(EditText nameET, String text) {
-		nameET.setText(text);
-		nameET.setTextColor(Color.GRAY);
-	}
 }
