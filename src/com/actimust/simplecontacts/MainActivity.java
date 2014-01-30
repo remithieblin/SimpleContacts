@@ -20,6 +20,7 @@ import com.actionbarsherlock.app.SherlockActivity;
 import com.actionbarsherlock.view.ActionMode;
 import com.actionbarsherlock.view.Menu;
 import com.actionbarsherlock.view.MenuItem;
+import com.jeremyfeinstein.slidingmenu.lib.SlidingMenu;
 
 public class MainActivity extends SherlockActivity {
 
@@ -34,6 +35,7 @@ public class MainActivity extends SherlockActivity {
 	private final String accountType = "com.google";
 	private String accountName;
 	private boolean mBackWasPressedInActionMode;
+	private SlidingMenu menu;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -53,6 +55,20 @@ public class MainActivity extends SherlockActivity {
 
 		setContentView(R.layout.activity_main);
 
+		// configure the SlidingMenu
+		 menu = new SlidingMenu(this);
+		menu.setMode(SlidingMenu.RIGHT);
+		menu.setTouchModeAbove(SlidingMenu.TOUCHMODE_FULLSCREEN);
+		// menu.setShadowWidthRes(R.dimen.shadow_width);
+		// menu.setShadowDrawable(R.drawable.shadow);
+		// menu.setBehindOffsetRes(R.dimen.slidingmenu_offset);
+		menu.setFadeDegree(0.35f);
+		menu.attachToActivity(this, SlidingMenu.SLIDING_WINDOW);
+		menu.setMenu(R.layout.settings);
+		
+		GestureManager gestureManager = new GestureManager();
+		gestureManager.manage(menu);
+		
 
 		final EditText nameET = ((EditText) findViewById(R.id.nameET));
 		nameET.setOnTouchListener(new OnTouchListener() {
@@ -80,29 +96,30 @@ public class MainActivity extends SherlockActivity {
 			}
 		});
 	}
-	
-	/**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        super.onCreateOptionsMenu(menu);
-		menu.add("Settings")
-      .setIcon( R.drawable.ic_launcher_settings )
-      .setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
-        return true;
-    }
 
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		super.onCreateOptionsMenu(menu);
+		menu.add("Settings").setIcon(R.drawable.ic_launcher_settings)
+				.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
+		return true;
+	}
+
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		menu.toggle();
+		return super.onOptionsItemSelected(item);
+	}
 
 	private final class AnActionModeOfEpicProportions implements
 			ActionMode.Callback {
 
 		@Override
 		public boolean onCreateActionMode(ActionMode mode, Menu menu) {
-			
 
-
-			
 			return true;
 		}
 
@@ -128,7 +145,7 @@ public class MainActivity extends SherlockActivity {
 			nameET.setText("");
 			EditText phoneET = ((EditText) findViewById(R.id.phoneET));
 			phoneET.setText("");
-			
+
 			mBackWasPressedInActionMode = false;
 			actionModeUp = false;
 		}
@@ -142,7 +159,6 @@ public class MainActivity extends SherlockActivity {
 		return super.dispatchKeyEvent(event);
 	}
 
-
 	private void saveContact() {
 
 		EditText nameET = ((EditText) findViewById(R.id.nameET));
@@ -150,7 +166,7 @@ public class MainActivity extends SherlockActivity {
 		EditText phoneET = ((EditText) findViewById(R.id.phoneET));
 		String phone = phoneET.getText().toString();
 
-		if (name != null && name != "" ) {
+		if (name != null && name != "") {
 
 			/*
 			 * Prepares the batch operation for inserting a new raw contact and
