@@ -1,10 +1,7 @@
 package com.actimust.simplecontacts;
 
 import java.util.ArrayList;
-import java.util.regex.Pattern;
 
-import android.accounts.Account;
-import android.accounts.AccountManager;
 import android.content.ContentProviderOperation;
 import android.content.Context;
 import android.os.Bundle;
@@ -14,6 +11,8 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnTouchListener;
 import android.widget.EditText;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
 import android.widget.Toast;
 
 import com.actionbarsherlock.app.SherlockActivity;
@@ -27,12 +26,6 @@ public class MainActivity extends SherlockActivity {
 	ActionMode mMode;
 	boolean actionModeUp;
 
-	public static final Pattern VALID_EMAIL_ADDRESS_REGEX = Pattern
-			.compile("[a-zA-Z0-9\\+\\.\\_\\%\\-\\+]{1,256}" + "\\@"
-					+ "[a-zA-Z0-9][a-zA-Z0-9\\-]{0,64}" + "(" + "\\."
-					+ "[a-zA-Z0-9][a-zA-Z0-9\\-]{0,25}" + ")+");
-
-	private final String accountType = "com.google";
 	private String accountName;
 	private boolean mBackWasPressedInActionMode;
 	private SlidingMenu menu;
@@ -46,17 +39,12 @@ public class MainActivity extends SherlockActivity {
 		// false, null, null, null, null);
 		// startActivityForResult(intent, SOME_REQUEST_CODE);
 
-		Pattern emailPattern = VALID_EMAIL_ADDRESS_REGEX; // API level 8+
-		Account[] accounts = AccountManager.get(this).getAccounts();
-		for (Account account : accounts)
-			if (account.type.equals(accountType)
-					&& emailPattern.matcher(account.name).matches())
-				accountName = account.name;
+		accountName = SimpleAccountManager.getFirstGoogleAccount(this);
 
 		setContentView(R.layout.activity_main);
 
 		// configure the SlidingMenu
-		 menu = new SlidingMenu(this);
+		menu = new SlidingMenu(this);
 		menu.setMode(SlidingMenu.RIGHT);
 		menu.setTouchModeAbove(SlidingMenu.TOUCHMODE_FULLSCREEN);
 		// menu.setShadowWidthRes(R.dimen.shadow_width);
@@ -66,9 +54,15 @@ public class MainActivity extends SherlockActivity {
 		menu.attachToActivity(this, SlidingMenu.SLIDING_WINDOW);
 		menu.setMenu(R.layout.settings);
 		
+		RadioGroup group = ((RadioGroup)findViewById(R.id.radio_selection_group));
+		RadioButton[] accountsChoices = SimpleAccountManager.getAccountsChoices(this);
+		for (RadioButton radioButton : accountsChoices) {
+			group.addView(radioButton);
+			
+		}
+
 		GestureManager gestureManager = new GestureManager();
 		gestureManager.manage(menu);
-		
 
 		final EditText nameET = ((EditText) findViewById(R.id.nameET));
 		nameET.setOnTouchListener(new OnTouchListener() {
@@ -96,6 +90,7 @@ public class MainActivity extends SherlockActivity {
 			}
 		});
 	}
+	
 
 	/**
 	 * {@inheritDoc}
@@ -187,7 +182,7 @@ public class MainActivity extends SherlockActivity {
 			ContentProviderOperation.Builder op = ContentProviderOperation
 					.newInsert(ContactsContract.RawContacts.CONTENT_URI)
 					.withValue(ContactsContract.RawContacts.ACCOUNT_TYPE,
-							accountType)
+							SimpleAccountManager.GOOGLE_TYPE)
 					.withValue(ContactsContract.RawContacts.ACCOUNT_NAME,
 							accountName);
 
