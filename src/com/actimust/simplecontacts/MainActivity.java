@@ -1,14 +1,17 @@
 package com.actimust.simplecontacts;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import android.content.ContentProviderOperation;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.provider.ContactsContract;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.View.OnTouchListener;
 import android.widget.EditText;
 import android.widget.RadioButton;
@@ -23,6 +26,8 @@ import com.jeremyfeinstein.slidingmenu.lib.SlidingMenu;
 
 public class MainActivity extends SherlockActivity {
 
+	private static final String NO_ACCOUNT_CHOSEN = "NO_ACCOUNT_CHOSEN";
+	private static final String ACCOUNT_CHOOSEN = "ACCOUNT_CHOOSEN";
 	ActionMode mMode;
 	boolean actionModeUp;
 
@@ -39,7 +44,10 @@ public class MainActivity extends SherlockActivity {
 		// false, null, null, null, null);
 		// startActivityForResult(intent, SOME_REQUEST_CODE);
 
-		accountName = SimpleAccountManager.getFirstGoogleAccount(this);
+		SharedPreferences settings = getSharedPreferences("pref", 0);
+		accountName = settings.getString(ACCOUNT_CHOOSEN, NO_ACCOUNT_CHOSEN);
+		if (accountName.equals(NO_ACCOUNT_CHOSEN))
+			accountName = SimpleAccountManager.getFirstGoogleAccount(this);
 
 		setContentView(R.layout.activity_main);
 
@@ -53,12 +61,34 @@ public class MainActivity extends SherlockActivity {
 		menu.setFadeDegree(0.35f);
 		menu.attachToActivity(this, SlidingMenu.SLIDING_WINDOW);
 		menu.setMenu(R.layout.settings);
-		
-		RadioGroup group = ((RadioGroup)findViewById(R.id.radio_selection_group));
-		RadioButton[] accountsChoices = SimpleAccountManager.getAccountsChoices(this);
-		for (RadioButton radioButton : accountsChoices) {
-			group.addView(radioButton);
+
+		final RadioGroup group = ((RadioGroup) findViewById(R.id.radio_selection_group));
+		List<String> accountsChoices = SimpleAccountManager
+				.getAccountsChoices(this);
+		int id = 0;
+		for (String account : accountsChoices) {
+			final RadioButton radioButton = new RadioButton(this);
+			radioButton.setText(account);
+			radioButton.setId(Integer.MAX_VALUE - id);
+			id++;
+			if(accountName.equals(account)){
+				group.check(radioButton.getId());
+				radioButton.setChecked(true);
+			}
 			
+			radioButton.setOnClickListener(new OnClickListener() {
+
+				@Override
+				public void onClick(View v) {
+					SharedPreferences settings = getSharedPreferences("pref",0);
+					SharedPreferences.Editor editor = settings.edit();
+					editor.putString(ACCOUNT_CHOOSEN, (String)radioButton.getText());
+					editor.commit();
+					
+					accountName = (String) radioButton.getText();
+				}
+			});
+			group.addView(radioButton);
 		}
 
 		GestureManager gestureManager = new GestureManager();
@@ -90,7 +120,6 @@ public class MainActivity extends SherlockActivity {
 			}
 		});
 	}
-	
 
 	/**
 	 * {@inheritDoc}
