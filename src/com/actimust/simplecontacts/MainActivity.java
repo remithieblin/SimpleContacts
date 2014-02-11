@@ -2,8 +2,10 @@ package com.actimust.simplecontacts;
 
 import java.util.List;
 
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.provider.ContactsContract;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
@@ -35,8 +37,9 @@ public class MainActivity extends SherlockActivity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		
-		//lol
-		System.out.println("lol");
+		Intent intent = getIntent();
+		String name = intent.getStringExtra(ContactsContract.Intents.Insert.NAME);
+		String number = intent.getStringExtra(ContactsContract.Intents.Insert.PHONE);
 
 		setAccount();
 
@@ -60,8 +63,9 @@ public class MainActivity extends SherlockActivity {
 				return false;
 			}
 		});
-
 		nameET.requestFocus();
+		if (name != null && name != "")
+			nameET.setText(name);
 
 		final EditText phoneET = ((EditText) findViewById(R.id.phoneET));
 		phoneET.setOnTouchListener(new OnTouchListener() {
@@ -74,6 +78,8 @@ public class MainActivity extends SherlockActivity {
 				return false;
 			}
 		});
+		if(number != null && number != "")
+			phoneET.setText(number);
 	}
 
 	private void setAccount() {
