@@ -1,15 +1,21 @@
 package com.actimust.simplecontacts;
 
+import java.util.ArrayList;
 import java.util.List;
 
+import android.content.ContentValues;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.provider.ContactsContract;
+import android.telephony.PhoneNumberUtils;
+import android.text.Editable;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.View.OnKeyListener;
 import android.view.View.OnTouchListener;
 import android.widget.EditText;
 import android.widget.RadioButton;
@@ -20,10 +26,12 @@ import com.actionbarsherlock.app.SherlockActivity;
 import com.actionbarsherlock.view.ActionMode;
 import com.actionbarsherlock.view.Menu;
 import com.actionbarsherlock.view.MenuItem;
+import com.google.common.base.Strings;
 import com.jeremyfeinstein.slidingmenu.lib.SlidingMenu;
 
 public class MainActivity extends SherlockActivity {
 
+	private static final String TAG = "CONTACT";
 	private static final String NO_ACCOUNT_CHOSEN = "NO_ACCOUNT_CHOSEN";
 	private static final String ACCOUNT_CHOOSEN = "ACCOUNT_CHOOSEN";
 	ActionMode mMode;
@@ -36,10 +44,40 @@ public class MainActivity extends SherlockActivity {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		
+
 		Intent intent = getIntent();
-		String name = intent.getStringExtra(ContactsContract.Intents.Insert.NAME);
-		String number = intent.getStringExtra(ContactsContract.Intents.Insert.PHONE);
+		String name = null;
+		String number = null;
+		if (intent != null) {
+			name = intent.getStringExtra(ContactsContract.Intents.Insert.NAME);
+			number = intent
+					.getStringExtra(ContactsContract.Intents.Insert.PHONE);
+			if (Strings.isNullOrEmpty(number))
+				number = intent.getStringExtra("formattedPhoneNumber");
+			if (Strings.isNullOrEmpty(number))
+				number = intent
+						.getStringExtra(ContactsContract.CommonDataKinds.Phone.NUMBER);
+
+			if (Strings.isNullOrEmpty(number)) {
+				Bundle extras = intent.getExtras();
+				if (extras != null) {
+
+					try {
+						@SuppressWarnings("unchecked")
+						ArrayList<ContentValues> datas = (ArrayList<ContentValues>) extras
+								.get("data");
+
+						ContentValues contentValues = datas.get(0);
+						String asString = contentValues
+								.getAsString("formattedPhoneNumber");
+						number = asString;
+					} catch (Exception e) {
+						System.out.println(e.getMessage());
+					}
+
+				}
+			}
+		}
 
 		setAccount();
 
@@ -78,8 +116,21 @@ public class MainActivity extends SherlockActivity {
 				return false;
 			}
 		});
-		if(number != null && number != "")
+		if (number != null && number != "")
 			phoneET.setText(number);
+		
+		phoneET.setOnKeyListener(new OnKeyListener() {
+			
+			@Override
+			public boolean onKey(View v, int keyCode, KeyEvent event) {
+				Editable number = ((EditText) v).getText();
+				Log.d(TAG,number.toString());
+				String formatNumber = PhoneNumberUtils.formatNumber(number.toString());
+				number.replace(0, number.length(), formatNumber);
+				Log.d(TAG,formatNumber);
+				return false;
+			}
+		});
 	}
 
 	private void setAccount() {
@@ -99,20 +150,21 @@ public class MainActivity extends SherlockActivity {
 			radioButton.setText(account);
 			radioButton.setId(Integer.MAX_VALUE - id);
 			id++;
-			if(accountName.equals(account)){
+			if (accountName.equals(account)) {
 				group.check(radioButton.getId());
 				radioButton.setChecked(true);
 			}
-			
+
 			radioButton.setOnClickListener(new OnClickListener() {
 
 				@Override
 				public void onClick(View v) {
-					SharedPreferences settings = getSharedPreferences("pref",0);
+					SharedPreferences settings = getSharedPreferences("pref", 0);
 					SharedPreferences.Editor editor = settings.edit();
-					editor.putString(ACCOUNT_CHOOSEN, (String)radioButton.getText());
+					editor.putString(ACCOUNT_CHOOSEN,
+							(String) radioButton.getText());
 					editor.commit();
-					
+
 					accountName = (String) radioButton.getText();
 				}
 			});
@@ -198,8 +250,9 @@ public class MainActivity extends SherlockActivity {
 		EditText phoneET = ((EditText) findViewById(R.id.phoneET));
 		String phone = phoneET.getText().toString();
 
-		if (name != null && name != "") 
+		if (name != null && name != "")
 			SimpleContactManager.addContact(this, accountName, name, phone);
+		finish();
 	}
 
 }
