@@ -10,7 +10,6 @@ import android.os.Bundle;
 import android.provider.ContactsContract;
 import android.telephony.PhoneNumberUtils;
 import android.text.Editable;
-import android.util.Log;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
@@ -31,7 +30,6 @@ import com.jeremyfeinstein.slidingmenu.lib.SlidingMenu;
 
 public class MainActivity extends SherlockActivity {
 
-	private static final String TAG = "CONTACT";
 	private static final String NO_ACCOUNT_CHOSEN = "NO_ACCOUNT_CHOSEN";
 	private static final String ACCOUNT_CHOOSEN = "ACCOUNT_CHOOSEN";
 	ActionMode mMode;
@@ -124,10 +122,8 @@ public class MainActivity extends SherlockActivity {
 			@Override
 			public boolean onKey(View v, int keyCode, KeyEvent event) {
 				Editable number = ((EditText) v).getText();
-				Log.d(TAG,number.toString());
 				String formatNumber = PhoneNumberUtils.formatNumber(number.toString());
 				number.replace(0, number.length(), formatNumber);
-				Log.d(TAG,formatNumber);
 				return false;
 			}
 		});
